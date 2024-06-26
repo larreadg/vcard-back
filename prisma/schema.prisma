@@ -1,0 +1,70 @@
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum AuthType {
+  LOCAL
+  LDAP
+}
+
+model RolRealm {
+  id                String          @id @default(uuid())
+  nombre            String
+  fechaCreacion     DateTime        @default(now())
+  fechaModificacion DateTime        @updatedAt
+  usuariosRealm     UsuarioRealm[]
+}
+
+model UsuarioRealm {
+  id                String          @id @default(uuid())
+  usuario           String
+  email             String          @unique
+  password          String
+  rolRealmId        String
+  activo            Boolean
+  fechaCreacion     DateTime        @default(now())
+  fechaModificacion DateTime        @updatedAt
+  rolRealm          RolRealm        @relation(fields: [rolRealmId], references: [id])
+  realmCreado       Realm[]         @relation("UsuarioRealmCreacion")
+  realmModificado   Realm[]         @relation("UsuarioRealmModificacion")
+}
+
+model Realm {
+  id                    String        @id @default(uuid())
+  nombre                String        @unique
+  logo                  String
+  template              String?
+  colorPrimario         String
+  colorSecundario       String
+  activo                Boolean       @default(true)
+  authType              AuthType      @default(LOCAL)
+  ldapUrl               String?
+  fechaCreacion         DateTime      @default(now())
+  fechaModificacion     DateTime      @updatedAt
+  usuarioCreacionId     String
+  usuarioModificacionId String
+  usuarioCreacion       UsuarioRealm @relation("UsuarioRealmCreacion", fields: [usuarioCreacionId], references: [id])
+  usuarioModificacion   UsuarioRealm @relation("UsuarioRealmModificacion", fields: [usuarioModificacionId], references: [id])
+  usuarios              Usuario[]
+}
+
+model Usuario {
+  id                String          @id @default(uuid())
+  nombre            String
+  cargo             String
+  documento         String
+  telefono          String
+  email             String          @unique
+  linkedin          String
+  realmId           String
+  fechaCreacion     DateTime        @default(now())
+  fechaModificacion DateTime        @updatedAt
+  password          String
+  activo            Boolean
+  realm             Realm           @relation(fields: [realmId], references: [id])
+}
