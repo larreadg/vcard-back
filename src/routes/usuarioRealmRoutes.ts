@@ -30,7 +30,7 @@ router.get('/', usuarioRealmController.getAllUsuarioRealms)
 
 router.get(
   '/:id/realms',
-  authenticateJWT('VC_ADMIN'),
+  authenticateJWT(['VC_ADMIN', 'VC_REALM_ADMIN']),
   [
     param('id').isUUID().withMessage('ID inválido'),
   ],

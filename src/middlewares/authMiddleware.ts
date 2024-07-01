@@ -4,8 +4,10 @@ import { handleControllerError, VCardError } from '../utils/error'
 import { AuthenticatedRequest } from '../interface/authenticatedRequestInterface'
 import { ResponseHandler } from '../utils/response'
 
-export const authenticateJWT = (requiredRol?: string) => {
+export const authenticateJWT = (requiredRol?: string | string[]) => {
   return (req: AuthenticatedRequest, res: Response, next: NextFunction) => {
+    if(typeof requiredRol === 'string') requiredRol = [requiredRol]
+
     const authHeader = req.headers.authorization
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
@@ -18,7 +20,7 @@ export const authenticateJWT = (requiredRol?: string) => {
       const decoded = verifyToken(token) as AuthenticatedRequest['user']
       req.user = decoded
 
-      if (requiredRol && (!req.user || req.user?.rol !== requiredRol)) {
+      if (requiredRol && (!req.user || !requiredRol.includes(req.user?.rol))) {
         throw new VCardError('Permiso denegado', 403)
       }
 

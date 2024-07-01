@@ -23,7 +23,7 @@ async function main() {
     const password = await hashPassword(<string> process.env.VC_ADMIN_PW)
     await prisma.usuarioRealm.createMany({
         data: [
-          { usuario: 'admin', email: 'admin@vcard', password, rolRealmId: realAdmin.id, activo: true },
+          { usuario: 'admin', email: 'admin@vcard.personal.com.py', password, rolRealmId: realAdmin.id, activo: true },
         ],
     })
   }

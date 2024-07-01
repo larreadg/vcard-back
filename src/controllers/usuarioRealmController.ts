@@ -45,7 +45,11 @@ export const getAllUsuarioRealms = async (_req: Request, res: Response) => {
 // Obtener los Realms de un UsuarioRealm por ID
 export const getRealmsUsuarioById = async (req: Request, res: Response) => {
   try {
-    const realms = await usuarioRealmService.getRealmsUsuarioById(req.params.id)
+    const { id } = req.params
+    const page = parseInt(req.query.page as string) || 1
+    const itemsPerPage = parseInt(req.query.itemsPerPage as string) || 10
+    const filter = req.query.filter as string || null
+    const realms = await usuarioRealmService.getRealmsUsuarioById(id, page, itemsPerPage, filter)
     res.status(200).json(ResponseHandler.success(realms, 'Realms obtenidos exitosamente'))
   } catch (error) {
     const { message, code } = handleControllerError(error, 'Error al obtener los Realms del UsuarioRealm')

@@ -1,7 +1,7 @@
 import prisma from '../prisma/cliente'
 import { Prisma } from '@prisma/client'
 import { hashPassword, comparePassword } from '../utils/password'
-import { handleError } from '../utils/error'
+import { VCardError, handleError } from '../utils/error'
 import { generateToken } from '../utils/jwt'
 
 // Crear un nuevo UsuarioRealm
@@ -46,21 +46,46 @@ export const getAllUsuarioRealms = async () => {
 }
 
 // Obtener los realms de un usuario
-export const getRealmsUsuarioById = async (id: string) => {
+export const getRealmsUsuarioById = async (id: string, page: number = 1, itemsPerPage: number = 10, filter: string | null = null) => {
   try {
+    const skip = (page - 1) * itemsPerPage
+    const take = itemsPerPage
+
+    const whereClause = {
+      usuarioCreacionId: id,
+      ...(filter && { nombre: { contains: filter } }),
+    }
+
     const usuarioRealm = await prisma.usuarioRealm.findUnique({
       where: { id },
       include: {
-        realmCreado: true
-      }
+        realmCreado: {
+          where: whereClause,
+          skip,
+          take,
+          orderBy: {
+            fechaCreacion: 'desc',
+          },
+        },
+      },
     })
 
-    if(!usuarioRealm){
-      throw new Error('UsuarioRealm no encontrado')
+    if (!usuarioRealm) {
+      throw new VCardError('UsuarioRealm no encontrado', 404)
     }
-    return usuarioRealm.realmCreado
+
+    const totalItems = await prisma.realm.count({
+      where: whereClause,
+    })
+
+    return {
+      realms: usuarioRealm.realmCreado,
+      page,
+      itemsPerPage,
+      totalItems,
+    }
   } catch (error) {
-    handleError(error, 'Error al obtener el UsuarioRealm', 404)
+    handleError(error, 'Error al obtener los Realms del UsuarioRealm', 404)
   }
 }
 
@@ -119,9 +144,9 @@ export const authenticateUsuarioRealm = async (emailOrUsername: string, password
       email: usuarioRealm.email,
       usuario: usuarioRealm.usuario,
       rol: usuarioRealm.rolRealm.nombre,
-    };
+    }
 
-    const token = generateToken(tokenPayload);
+    const token = generateToken(tokenPayload)
 
     return token
     
